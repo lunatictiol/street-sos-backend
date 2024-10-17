@@ -12,8 +12,12 @@ let dotenv = require('dotenv').config()
 /**
  * Get port from environment and store in Express.
  */
+//local
+//const PORT = dotenv.parsed.PORT 
+//server
+const PORT = process.env.PORT
+var port = normalizePort(PORT || '3000');
 
-var port = normalizePort(dotenv.parsed.PORT || '3000');
 app.set('port', port);
 
 /**

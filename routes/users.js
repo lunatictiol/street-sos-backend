@@ -1,7 +1,10 @@
 var express = require("express");
 const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 let dotenv = require('dotenv').config()
-const uri = `mongodb+srv://waseem:${dotenv.parsed.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// local
+//const uri = `mongodb+srv://waseem:${dotenv.parsed.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+//server
+const uri = `mongodb+srv://waseem:${process.env.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 var router = express.Router();
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
@@ -110,5 +113,8 @@ const data = req.body;
  //res.status(200).send({'User found successfully':findResult});
 
 })
+
+
+
 
 module.exports = router;
