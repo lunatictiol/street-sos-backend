@@ -104,7 +104,7 @@ const data = req.body;
   const passwordMatch = await bcrypt.compare(password, findResult.password);
 
     if (passwordMatch) {
-      res.send('Login successful');
+      res.send({message:'Login successful',userId: findResult._id});
     } else {
       res.status(400).send('Invalid credentials');
     }
