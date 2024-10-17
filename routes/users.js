@@ -2,9 +2,9 @@ var express = require("express");
 const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 let dotenv = require('dotenv').config()
 // local
-//const uri = `mongodb+srv://waseem:${dotenv.parsed.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://waseem:${dotenv.parsed.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 //server
-const uri = `mongodb+srv://waseem:${process.env.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+//const uri = `mongodb+srv://waseem:${process.env.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 var router = express.Router();
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
@@ -32,7 +32,7 @@ const signUpSchema = Joi.object({
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
-  user_id: Joi.string().required(),
+
 })
 
 const client = new MongoClient(uri, {
@@ -89,11 +89,10 @@ const data = req.body;
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
-  const {password,email,user_id } = data;
+  const {password,email } = data;
   const database = client.db("streetSOS");
-   const userid = ObjectId.createFromHexString(user_id)
   const users = database.collection("users");
-  const findResult = await users.findOne({ _id: userid});
+  const findResult = await users.findOne({ email: email});
   if(!findResult){
     return res.status(400).json({ error:"user does'nt exist" });
   }
