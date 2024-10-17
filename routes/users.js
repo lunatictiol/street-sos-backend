@@ -105,6 +105,7 @@ const data = req.body;
     return res.status(400).json({ error: error.details[0].message });
   }
   const {password,email } = data;
+  await client.connect();
   const database = client.db("streetSOS");
   const users = database.collection("users");
   const findResult = await users.findOne({ email: email});
