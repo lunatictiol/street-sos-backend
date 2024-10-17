@@ -73,10 +73,11 @@ router.post("/create", async function (req, res, next) {
     await client.db("streetSOS").command({ ping: 1 });
     const database = client.db("streetSOS");
     const users = database.collection("users");
+    const findResult = await users.findOne({ email: email});
     if(findResult){
       return res.status(400).json({ error:"user already exist" });
     }
-    const findResult = await users.findOne({ email: email});
+    
     const doc = {
       "name": name,
      "email":email,
