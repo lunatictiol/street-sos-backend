@@ -1,6 +1,7 @@
 var express = require("express");
 const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 let dotenv = require('dotenv').config()
+const path = require('path');
 // local
 const uri = `mongodb+srv://waseem:${dotenv.parsed.MONOGO_PASSWORD}@cluster0.5zygy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 //server
@@ -9,6 +10,10 @@ var router = express.Router();
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const multer = require('multer');
+const { bucket } = require('./firebase');
+const { v4: uuidv4 } = require('uuid');
+const upload = multer({ storage: multer.memoryStorage() });
 
 const signUpSchema = Joi.object({
   name: Joi.string().required(),
@@ -150,7 +155,8 @@ router.post("/complaint", async function (req, res, next){
     userID: ObjectId.createFromHexString(userId),
   };
   const result = await grievance.insertOne(doc);
-  res.status(201).send({'complaint registered successfully':result});
+  res.status(201).send({message:'complaint registered successfully',id:result.insertedId});
+
 }
 catch (error) {
   console.error(error);
@@ -161,6 +167,85 @@ finally{
 }
 
 })
+
+router.post('/upload', upload.single('photo'), async (req, res) => {
+  try {
+    console.log("hereeeee");
+    // Get the file from the request
+    const file = req.file;
+    const { id } = req.body; // Assuming `id` is a field in the form-data
+
+    if (!file || !id) {
+     
+      
+      return res.status(400).json({error:'ID and file are required.'});
+    }
+
+    // Generate a unique filename
+    const fileName = `${uuidv4()}${path.extname(file.originalname)}`;
+
+    // Upload the file to Firebase storage
+    const blob = bucket.file(fileName);
+    const blobStream = blob.createWriteStream({
+      metadata: {
+        contentType: file.mimetype
+      }
+    });
+
+    blobStream.on('error', (err) => {
+      console.error(err);
+      res.status(500).json({error:"something went wrong"});
+    });
+
+    blobStream.on('finish', async () => {
+      // Get the public URL of the file
+      await blob.makePublic();
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+
+      // Save the URL to MongoDB
+      await client.connect();
+      const database = client.db("streetSOS");
+      const grievance = database.collection("grievance");
+      const result = await grievance.updateOne({ _id: ObjectId.createFromHexString(id) }, // Find the document with the matching id
+        { $set: { url: publicUrl } });
+
+      // Send the URL as a response
+      res.status(200).json({ url: publicUrl });
+    });
+
+    blobStream.end(file.buffer);
+  } catch (error) {
+    console.log("hereeeee");
+    console.error('Error during file upload:', error);
+    res.status(500).json({error:'Error uploading file'});
+  }
+
+})
+router.get("/getAllcomplaints", async function (req, res, next){
+  try{
+  
+  const id = req.query.id
+  console.log(id)
+  await client.connect();
+  const database = client.db("streetSOS");
+  const grievance = database.collection("grievance");
+  const result = await grievance.find({userID:ObjectId.createFromHexString(id)}).toArray();
+  res.status(200).send({message:"complaints retrieved successfully",data: result});
+
+  }
+  catch (error) {
+      console.error(error);
+      res.status(500).send('An error occurred');
+    }
+    finally{
+      await client.close();
+    }
+
+}) 
+
+
+
+
 
 
 
