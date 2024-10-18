@@ -46,7 +46,8 @@ const grievienceSchema = Joi.object({
   description: Joi.string().required(),
   latitude: Joi.number().required(),
   longitude: Joi.number().required(),
-  userId :Joi.string().required()
+  userId :Joi.string().required(),
+  address:Joi.string().required(),
 
 })
 
@@ -140,7 +141,7 @@ router.post("/complaint", async function (req, res, next){
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
-  const { complaint, description, latitude, longitude,userId} = data
+  const { complaint, description, latitude, longitude,userId,address} = data
   await client.connect();
   const database = client.db("streetSOS");
   const grievance = database.collection("grievance");
@@ -153,6 +154,7 @@ router.post("/complaint", async function (req, res, next){
     },
     verified: false,
     userID: ObjectId.createFromHexString(userId),
+    address:address
   };
   const result = await grievance.insertOne(doc);
   res.status(201).send({message:'complaint registered successfully',id:result.insertedId});
